@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Museum Website Project</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        heritage: {
+                            gold: '#D4AF37',
+                            dark: '#0A0A0A',
+                            accent: '#FFD700',
+                            glass: 'rgba(255, 255, 255, 0.05)',
+                            'glass-heavy': 'rgba(10, 10, 10, 0.8)',
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Playfair Display', 'serif'],
+                        sans: ['Montserrat', 'sans-serif'],
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.8s ease-out forwards',
+                        'slide-up': 'slideUp 1s ease-out forwards',
+                        'glow': 'glowPulse 2s ease-in-out infinite alternate',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(30px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        glowPulse: {
+                            'from': { textShadow: '0 0 10px rgba(212, 175, 55, 0.5)' },
+                            'to': { textShadow: '0 0 25px rgba(212, 175, 55, 0.9)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply text-white font-sans antialiased overflow-x-hidden bg-heritage-dark;
+            }
+            body::before {
+                content: "";
+                @apply fixed inset-0 z-[-1];
+                background: url("assets/images/pang.png") no-repeat center center fixed;
+                background-size: cover;
+                opacity: 0.55;
+            }
+            body::after {
+                content: "";
+                @apply fixed inset-0 z-[-1] bg-gradient-to-b from-heritage-dark/30 via-heritage-dark/50 to-heritage-dark/80;
+            }
+        }
+        @layer components {
+            .glass-card {
+                @apply bg-heritage-dark/60 border border-white/10 rounded-[2.5rem] transition-all duration-500 hover:border-heritage-gold/30 hover:bg-heritage-dark/80;
+            }
+            .nav-link {
+                @apply px-6 py-2 rounded-full transition-all duration-300 text-sm font-bold tracking-widest uppercase border border-transparent flex items-center gap-2;
+            }
+            .nav-link.active {
+                @apply bg-heritage-gold text-heritage-dark shadow-[0_0_20px_rgba(212,175,55,0.4)] scale-105;
+            }
+            .nav-link:not(.active):hover {
+                @apply border-heritage-gold/30 text-heritage-gold bg-white/5;
+            }
+            .slider-btn {
+                @apply absolute top-1/2 -translate-y-1/2 bg-heritage-dark/80 text-white hover:bg-heritage-gold hover:text-heritage-dark p-4 rounded-full transition-all z-20 border border-white/10 shadow-2xl hover:scale-110 active:scale-90;
+            }
+            .reveal {
+                @apply opacity-0 translate-y-10 transition-all duration-1000 ease-out;
+            }
+            .reveal.active {
+                @apply opacity-100 translate-y-0;
+            }
+            .reveal-item {
+                @apply opacity-0 translate-y-8 transition-all duration-700 ease-out;
+            }
+            .reveal.active .reveal-item {
+                @apply opacity-100 translate-y-0;
+            }
+        }
+
+        .hero-bg {
+            background-image: linear-gradient(to bottom, rgba(10, 10, 10, 0.4), rgba(10, 10, 10, 0.8)), url("assets/images/pang.png");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .digital-grid {
+            background-image: radial-gradient(circle at 2px 2px, rgba(212, 175, 55, 0.08) 1px, transparent 0);
+            background-size: 50px 50px;
+            animation: gridMove 30s linear infinite;
+        }
+
+        @keyframes gridMove {
+            from { background-position: 0 0; }
+            to { background-position: 50px 50px; }
+        }
+
+        .hero-text-glow {
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.4), 0 0 60px rgba(212, 175, 55, 0.2);
+        }
+
+        .scanline {
+            width: 100%;
+            height: 150px;
+            z-index: 5;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(212, 175, 55, 0.03) 50%, rgba(0, 0, 0, 0) 100%);
+            opacity: 0.15;
+            position: absolute;
+            bottom: 100%;
+            animation: scanline 10s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -150px; }
+        }
+
+        section { display: none; }
+        section.active { display: block; }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            @apply bg-heritage-dark;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            @apply bg-heritage-gold/20 rounded-full border-2 border-heritage-dark hover:bg-heritage-gold/40;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .text-gradient {
+            @apply bg-clip-text text-transparent bg-gradient-to-r from-white via-heritage-gold to-white bg-[length:200%_auto] animate-[shimmer_3s_linear_infinite];
+        }
+
+        @keyframes shimmer {
+            to { background-position: 200% center; }
+        }
+    </style>
+</head>
+
+<body class="custom-scrollbar selection:bg-heritage-gold selection:text-heritage-dark">
+
+    <!-- Header & Navigation -->
+    <header class="fixed top-0 left-0 w-full z-[60] transition-all duration-500" id="main-header">
+        <div class="container mx-auto px-6 py-4">
+            <div class="glass-card !rounded-full !bg-heritage-dark/80 px-6 py-3 flex justify-between items-center gap-4 border-white/5 shadow-2xl">
+                <h1 class="font-serif text-xl md:text-2xl font-bold tracking-tighter text-heritage-gold flex items-center gap-3">
+                    <div class="p-2 bg-heritage-gold/10 rounded-lg">
+                        <i data-lucide="palmtree" class="w-6 h-6"></i>
+                    </div>
+                    <span class="hidden sm:inline">DIGITAL MUSEUM</span>
+                </h1>
+                
+                <nav class="hidden md:flex gap-2">
+                    <button id="nav-home" class="nav-link active" onclick="showSection('home', this)">
+                        <i data-lucide="home" class="w-4 h-4"></i> Home
+                    </button>
+                    <button id="nav-gallery" class="nav-link" onclick="showSection('gallery', this)">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i> Gallery
+                    </button>
+                    <button id="nav-references" class="nav-link" onclick="showSection('references', this)">
+                        <i data-lucide="book-open" class="w-4 h-4"></i> Sources
+                    </button>
+                    <button id="nav-contact" class="nav-link" onclick="openContactModal()">
+                        <i data-lucide="mail" class="w-4 h-4"></i> Contact
+                    </button>
+                </nav>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="md:hidden p-2 text-heritage-gold" onclick="toggleMobileMenu()">
+                    <i data-lucide="menu" id="menu-icon"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Menu Overlay -->
+        <div id="mobile-menu" class="fixed inset-0 bg-heritage-dark/95 z-[70] hidden flex flex-col items-center justify-center gap-8 p-12 transition-all duration-500 opacity-0 translate-y-full">
+            <div class="mb-8 flex flex-col items-center gap-4">
+                <div class="p-5 bg-heritage-gold/10 rounded-3xl text-heritage-gold animate-glow">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 21h18" />
+                        <path d="M3 7v1a3 3 0 0 0 6 0V7m6 0v1a3 3 0 0 0 6 0V7M3 7l9-4 9 4M4 11v10m16-10v10m-8-10v10m-8-6h16" />
+                    </svg>
+                </div>
+                <div class="text-center">
+                    <p class="text-[10px] tracking-[0.6em] text-heritage-gold font-bold uppercase mb-1">Digital</p>
+                    <h2 class="font-serif text-4xl font-bold text-white tracking-tighter">MUSEUM</h2>
+                </div>
+            </div>
+            <button class="absolute top-10 right-10 text-white/50 hover:text-heritage-gold" onclick="toggleMobileMenu()">
+                <i data-lucide="x" class="w-10 h-10"></i>
+            </button>
+            <button class="text-3xl font-serif font-bold hover:text-heritage-gold transition-colors" onclick="showSection('home'); toggleMobileMenu()">Home</button>
+            <button class="text-3xl font-serif font-bold hover:text-heritage-gold transition-colors" onclick="showSection('gallery'); toggleMobileMenu()">Gallery</button>
+            <button class="text-3xl font-serif font-bold hover:text-heritage-gold transition-colors" onclick="showSection('references'); toggleMobileMenu()">Sources</button>
+            <button class="text-3xl font-serif font-bold hover:text-heritage-gold transition-colors" onclick="openContactModal(); toggleMobileMenu()">Contact</button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        
+        <!-- Home Section -->
+        <section id="home" class="active">
+            <div class="hero-bg min-h-screen flex items-center justify-center relative overflow-hidden">
+                <!-- Decorative Grid Overlay -->
+                <div class="absolute inset-0 digital-grid opacity-30"></div>
+                <div class="scanline"></div>
+                
+                <!-- Animated Background Elements -->
+                <div class="absolute top-[20%] left-[10%] w-[30rem] h-[30rem] bg-heritage-gold/5 rounded-full blur-[120px] animate-float"></div>
+                <div class="absolute bottom-[20%] right-[10%] w-[40rem] h-[40rem] bg-heritage-gold/5 rounded-full blur-[150px] animate-float" style="animation-delay: -3s"></div>
+
+                <div class="container mx-auto px-6 z-10">
+                    <div class="max-w-6xl mx-auto text-center">
+                        <div class="inline-flex items-center gap-3 px-6 py-2 mb-10 rounded-full border border-heritage-gold/20 bg-heritage-gold/10 animate-fade-in">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-heritage-gold opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-heritage-gold"></span>
+                            </span>
+                            <span class="text-heritage-gold text-xs md:text-sm font-bold tracking-[0.4em] uppercase">Digital Heritage Experience</span>
+                        </div>
+                        
+                        <h2 class="text-4xl md:text-8xl font-serif font-bold text-white mb-8 leading-[1.1] animate-slide-up">
+                            <span class="text-heritage-gold hero-text-glow">WELCOME TO</span><br>
+                            <span class="text-white drop-shadow-2xl">MUSEUM PORTAL</span>
+                        </h2>
+                        
+                        <p class="max-w-4xl mx-auto text-xl md:text-2xl text-white mb-14 font-light leading-relaxed animate-fade-in drop-shadow-lg" style="animation-delay: 0.3s">
+                            Step inside Filipino culture through stories, landmarks, and visual heritage.<br class="hidden md:block">
+                            Explore this curated museum portal to learn about iconic sites, living traditions, and the rich history of the Pangasinan.
+                        </p>
+                        
+                        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in" style="animation-delay: 0.6s">
+                            <button onclick="showSection('gallery', document.getElementById('nav-gallery'))" class="group relative px-12 py-5 bg-heritage-gold text-heritage-dark font-bold rounded-full overflow-hidden transition-all hover:scale-105 active:scale-95 shadow-[0_20px_40px_rgba(212,175,55,0.3)]">
+                                <span class="relative z-10 flex items-center gap-3 text-lg">
+                                    EXPLORE GALLERY <i data-lucide="compass" class="w-6 h-6 group-hover:rotate-90 transition-transform duration-500"></i>
+                                </span>
+                            </button>
+                            <button onclick="showSection('references', document.getElementById('nav-references'))" class="px-12 py-5 bg-white/5 hover:bg-white/10 text-white font-bold rounded-full border border-white/10 transition-all hover:border-heritage-gold/50 text-lg">
+                                LEARN MORE
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Floating Scroll Indicator -->
+                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-100 animate-bounce">
+                    <span class="text-[10px] tracking-[0.4em] uppercase font-bold text-heritage-gold drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]">Discover</span>
+                    <div class="w-[1.5px] h-12 bg-gradient-to-b from-heritage-gold to-transparent shadow-xl"></div>
+                </div>
+            </div>
+
+            <!-- Featured Collection Slider -->
+            <div class="container mx-auto px-6 py-40">
+                <div class="flex flex-col md:flex-row justify-between items-end gap-8 mb-20 reveal">
+                    <div class="max-w-2xl">
+                        <div class="flex items-center gap-4 text-heritage-gold mb-6">
+                            <div class="h-[2px] w-16 bg-heritage-gold"></div>
+                            <span class="text-sm font-bold uppercase tracking-[0.4em]">Featured Collection</span>
+                        </div>
+                        <h3 class="font-serif text-5xl md:text-8xl font-bold text-white mb-8">Digital <span class="text-heritage-gold">Archives</span></h3>
+                        <p class="text-white/50 text-xl leading-relaxed">Preserving the past for the future. A curated selection of our most significant cultural artifacts.</p>
+                    </div>
+                </div>
+                
+                <div class="relative group reveal" style="transition-delay: 0.2s">
+                    <div class="overflow-hidden rounded-[3rem] shadow-[0_40px_100px_rgba(0,0,0,0.5)] border border-white/10 bg-white/5">
+                        <div class="flex transition-transform duration-[1200ms] cubic-bezier(0.23, 1, 0.32, 1)" id="track-home-gallery">
+                            <div class="w-full shrink-0 aspect-[16/9] relative overflow-hidden group/img">
+                                <img src="assets/images/kalukor 1.jpeg" class="w-full h-full object-cover cursor-zoom-in transition-transform duration-1000 group-hover/img:scale-110" onclick="openModal(this.src)">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500 flex items-end p-12">
+                                    <div>
+                                        <p class="text-heritage-gold font-bold tracking-widest mb-2">SCULPTURE</p>
+                                        <h4 class="text-4xl font-serif font-bold text-white">Kalukor</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full shrink-0 aspect-[16/9] relative overflow-hidden group/img">
+                                <img src="assets/images/kalukor 2.jpg" class="w-full h-full object-cover cursor-zoom-in transition-transform duration-1000 group-hover/img:scale-110" onclick="openModal(this.src)">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500 flex items-end p-12">
+                                    <div>
+                                        <p class="text-heritage-gold font-bold tracking-widest mb-2">MARITIME</p>
+                                        <h4 class="text-4xl font-serif font-bold text-white">Traditional Fishing</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full shrink-0 aspect-[16/9] relative overflow-hidden group/img">
+                                <img src="assets/images/jeepney.jpeg" class="w-full h-full object-cover cursor-zoom-in transition-transform duration-1000 group-hover/img:scale-110" onclick="openModal(this.src)">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500 flex items-end p-12">
+                                    <div>
+                                        <p class="text-heritage-gold font-bold tracking-widest mb-2">TRANSPORT</p>
+                                        <h4 class="text-4xl font-serif font-bold text-white">King of the Road</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full shrink-0 aspect-[16/9] relative overflow-hidden group/img">
+                                <img src="assets/images/kalabaw 1.jpg" class="w-full h-full object-cover cursor-zoom-in transition-transform duration-1000 group-hover/img:scale-110" onclick="openModal(this.src)">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500 flex items-end p-12">
+                                    <div>
+                                        <p class="text-heritage-gold font-bold tracking-widest mb-2">AGRICULTURE</p>
+                                        <h4 class="text-4xl font-serif font-bold text-white">The Carabao</h4>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="w-full shrink-0 aspect-[16/9] relative overflow-hidden group/img">
+                                <img src="assets/images/farmers.JPEG" class="w-full h-full object-cover cursor-zoom-in transition-transform duration-1000 group-hover/img:scale-110" onclick="openModal(this.src)">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover/img:opacity-100 transition-opacity duration-500 flex items-end p-12">
+                                    <div>
+                                        <p class="text-heritage-gold font-bold tracking-widest mb-2">INDUSTRY</p>
+                                        <h4 class="text-4xl font-serif font-bold text-white">Salt Makers</h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <button class="slider-btn left-10 transition-all" onclick="moveSlide('home-gallery', -1, true)">
+                        <i data-lucide="arrow-left" class="w-8 h-8"></i>
+                    </button>
+                    <button class="slider-btn right-10 transition-all" onclick="moveSlide('home-gallery', 1, true)">
+                        <i data-lucide="arrow-right" class="w-8 h-8"></i>
+                    </button>
+
+                    <!-- Indicators -->
+                    <div class="absolute -bottom-16 left-1/2 -translate-x-1/2 flex gap-4" id="home-gallery-indicators"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Gallery Section -->
+        <section id="gallery" class="py-24">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-32 reveal">
+                    <h2 class="font-serif text-6xl md:text-9xl font-bold mb-8">Museum <span class="text-heritage-gold">Gallery</span></h2>
+                    <div class="w-32 h-1.5 bg-heritage-gold mx-auto rounded-full shadow-[0_0_20px_rgba(212,175,55,0.5)]"></div>
+                    <p class="mt-12 text-white/50 text-xl max-w-2xl mx-auto font-light">A detailed look at the exhibits and stories that define Pangasinan's rich history.</p>
+                </div>
+
+                <div class="space-y-40">
+                    
+                    <!-- CARD: Kalukor -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center reveal">
+                        <div class="group relative overflow-hidden rounded-[3rem] aspect-[4/3] glass-card shadow-2xl">
+                            <div class="flex transition-transform duration-700 h-full" id="track-kalukor">
+                                <img src="assets/images/kalukor 1.jpeg" class="w-full h-full object-cover cursor-zoom-in shrink-0" onclick="openModal(this.src)">
+                                <img src="assets/images/kalukor 2.jpg" class="w-full h-full object-cover cursor-zoom-in shrink-0" onclick="openModal(this.src)">
+                                <img src="assets/images/kalukor 3.jpeg" class="w-full h-full object-cover cursor-zoom-in shrink-0" onclick="openModal(this.src)">
+                            </div>
+                            <button class="slider-btn left-6" onclick="moveSlide('kalukor', -1, true)"><i data-lucide="chevron-left" class="w-8 h-8"></i></button>
+                            <button class="slider-btn right-6" onclick="moveSlide('kalukor', 1, true)"><i data-lucide="chevron-right" class="w-8 h-8"></i></button>
+                        </div>
+                        <div class="space-y-10">
+                            <div class="reveal-item inline-flex items-center gap-3 px-5 py-2 rounded-full border border-heritage-gold/20 bg-heritage-gold/5 text-heritage-gold text-xs font-bold tracking-[0.3em] uppercase" style="transition-delay: 200ms">
+                                <i data-lucide="anchor" class="w-4 h-4"></i> Maritime Art
+                            </div>
+                            <h3 class="reveal-item font-serif text-5xl md:text-7xl font-bold text-white tracking-tight" style="transition-delay: 400ms">
+                                KALUKOR
+                            </h3>
+                            <div class="reveal-item relative min-h-[180px]" style="transition-delay: 600ms">
+                                <div id="desc-kalukor" class="text-white/60 text-lg md:text-xl leading-relaxed font-light transition-all duration-300">
+                                    <p>According to UNESCO/ICHCAP (2021), “Kalukor” is a traditional beach seine fishing practice in Pangasinan where fishermen collaboratively pull nets from the shore for catching fishes.</p>
+                                </div>
+                            </div>
+                            <button onclick="nextDesc('kalukor')" class="reveal-item group px-8 py-4 bg-white/5 hover:bg-heritage-gold hover:text-heritage-dark border border-white/10 rounded-2xl transition-all duration-300 font-bold flex items-center gap-3" style="transition-delay: 800ms">
+                                <span class="tracking-widest uppercase text-sm">Read More</span>
+                                <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CARD: Jeepney -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center reveal">
+                        <div class="lg:order-2 group relative overflow-hidden rounded-[3rem] aspect-[4/3] glass-card shadow-2xl">
+                            <div class="flex transition-transform duration-700 h-full" id="track-jeepney">
+                                <img src="assets/images/jeepney.jpeg" class="w-full h-full object-cover cursor-zoom-in shrink-0" onclick="openModal(this.src)">
+                                <img src="assets/images/jeepney2.JPEG" class="w-full h-full object-cover cursor-zoom-in shrink-0" onclick="openModal(this.src)">
+                            </div>
+                            <button class="slider-btn left-6" onclick="moveSlide('jeepney', -1, true)"><i data-lucide="chevron-left" class="w-8 h-8"></i></button>
+                            <button class="slider-btn right-6" onclick="moveSlide('jeepney', 1, true)"><i data-lucide="chevron-right" class="w-8 h-8"></i></button>
+                        </div>
+                        <div class="lg:order-1 space-y-10">
+                            <div class="reveal-item inline-flex items-center gap-3 px-5 py-2 rounded-full border border-heritage-gold/20 bg-heritage-gold/5 text-heritage-gold text-xs font-bold tracking-[0.3em] uppercase" style="transition-delay: 200ms">
+                                <i data-lucide="truck" class="w-4 h-4"></i> Iconic Transport
+                            </div>
+                            <h3 class="reveal-item font-serif text-5xl md:text-7xl font-bold text-white tracking-tight" style="transition-delay: 400ms">
+                                Jeepney
+                            </h3>
+                            <div class="reveal-item relative min-h-[180px]" style="transition-delay: 600ms">
+                                <div id="desc-jeepney" class="text-white/60 text-lg md:text-xl leading-relaxed font-light transition-all duration-300">
+                                    <p>Jeepneys are often called “the king of the road”, but in the past, it was just used as a military jeep that the United States army left in the Philippines. After World War II, the public transport in the country was devastated but Filipinos, known for being the street smart people they are, found a way to convert the remaining military jeeps into something useful for their survival. They modified the vehicles by adding roofs, extending the chassis, and installing rear bench seats that created a unique look and affordable public transport system that eventually became an icon in the country.</p>
+                                </div>
+                            </div>
+                            <button onclick="nextDesc('jeepney')" class="reveal-item group px-8 py-4 bg-white/5 hover:bg-heritage-gold hover:text-heritage-dark border border-white/10 rounded-2xl transition-all duration-300 font-bold flex items-center gap-3" style="transition-delay: 800ms">
+                                <span class="tracking-widest uppercase text-sm">Next Insight</span>
+                                <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CARD: Kalabaw -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center reveal">
+                        <div class="group relative overflow-hidden rounded-[3rem] aspect-[4/3] glass-card shadow-2xl">
+                            <div class="flex transition-transform duration-700 h-full" id="track-kalabaw">
+                                <img src="assets/images/kalabaw 1.jpg" class="w-full h-full object-cover cursor-zoom-in shrink-0" onclick="openModal(this.src)">
+                                <img src="assets/images/kalabaw 2.jpeg" class="w-full h-full object-cover cursor-zoom-in shrink-0" onclick="openModal(this.src)">
+                            </div>
+                            <button class="slider-btn left-6" onclick="moveSlide('kalabaw', -1, true)"><i data-lucide="chevron-left" class="w-8 h-8"></i></button>
+                            <button class="slider-btn right-6" onclick="moveSlide('kalabaw', 1, true)"><i data-lucide="chevron-right" class="w-8 h-8"></i></button>
+                        </div>
+                        <div class="space-y-10">
+                            <div class="reveal-item inline-flex items-center gap-3 px-5 py-2 rounded-full border border-heritage-gold/20 bg-heritage-gold/5 text-heritage-gold text-xs font-bold tracking-[0.3em] uppercase" style="transition-delay: 200ms">
+                                <i data-lucide="paw-print" class="w-4 h-4"></i> Farmer's Partner
+                            </div>
+                            <h3 class="reveal-item font-serif text-5xl md:text-7xl font-bold text-white tracking-tight" style="transition-delay: 400ms">
+                                Kalabaw
+                            </h3>
+                            <div class="reveal-item relative min-h-[180px]" style="transition-delay: 600ms">
+                                <div id="desc-kalabaw" class="text-white/60 text-lg md:text-xl leading-relaxed font-light transition-all duration-300">
+                                    <p>The people of Pangasinan really love the animal “Kalabaw” or Carabao. This kalabaw is very special to them. It makes them think of farming and the way they live every day. The kalabaw reminds them of Pangasinan and the life they have there with the kalabaw. At this museum you can see the kalabaw pulling a cart. The cart is filled with baskets that people made by hand.</p>
+                                </div>
+                            </div>
+                            <button onclick="nextDesc('kalabaw')" class="reveal-item group px-8 py-4 bg-white/5 hover:bg-heritage-gold hover:text-heritage-dark border border-white/10 rounded-2xl transition-all duration-300 font-bold flex items-center gap-3" style="transition-delay: 800ms">
+                                <span class="tracking-widest uppercase text-sm">Explore Tradition</span>
+                                <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CARD: Dayat -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center reveal">
+                        <div class="lg:order-2 group relative overflow-hidden rounded-[3rem] aspect-[4/3] glass-card shadow-2xl">
+                            <div class="flex transition-transform duration-700 h-full" id="track-dayat">
+                                <img src="assets/images/dayat.jpg" class="w-full h-full object-cover cursor-zoom-in shrink-0" onclick="openModal(this.src)">
+                                <img src="assets/images/dayat2.jpg" class="w-full h-full object-cover cursor-zoom-in shrink-0" onclick="openModal(this.src)">
+                            </div>
+                            <button class="slider-btn left-6" onclick="moveSlide('dayat', -1, true)"><i data-lucide="chevron-left" class="w-8 h-8"></i></button>
+                            <button class="slider-btn right-6" onclick="moveSlide('dayat', 1, true)"><i data-lucide="chevron-right" class="w-8 h-8"></i></button>
+                        </div>
+                        <div class="lg:order-1 space-y-10">
+                            <div class="reveal-item inline-flex items-center gap-3 px-5 py-2 rounded-full border border-heritage-gold/20 bg-heritage-gold/5 text-heritage-gold text-xs font-bold tracking-[0.3em] uppercase" style="transition-delay: 200ms">
+                                <i data-lucide="waves" class="w-4 h-4"></i> Visual Installation
+                            </div>
+                            <h3 class="reveal-item font-serif text-5xl md:text-7xl font-bold text-white tracking-tight" style="transition-delay: 400ms">
+                                DÁYAT
+                            </h3>
+                            <div class="reveal-item relative min-h-[180px]" style="transition-delay: 600ms">
+                                <div id="desc-dayat" class="text-white/60 text-lg md:text-xl leading-relaxed font-light transition-all duration-300">
+                                    <p>The “DÁYAT” is a visual art installation featured in the Banaan Pangasinan Provincial Museum that highlights the significance of the sea among the residents of Pangasinan. “Dayat” in Tagalog “Dagat” refers to the sea. This visual art installation captures the lives of the fishermen who earns from fishing. The art piece conveys the message that the sea is an essential natural resource and source of cultural identity for the people living nearby coastal regions of Pangasinan.</p>
+                                </div>
+                            </div>
+                            <button onclick="nextDesc('dayat')" class="reveal-item group px-8 py-4 bg-white/5 hover:bg-heritage-gold hover:text-heritage-dark border border-white/10 rounded-2xl transition-all duration-300 font-bold flex items-center gap-3" style="transition-delay: 800ms">
+                                <span class="tracking-widest uppercase text-sm">Artistic Meaning</span>
+                                <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- CARD: Farmers -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center reveal">
+                        <div class="group relative overflow-hidden rounded-[3rem] aspect-[4/3] glass-card shadow-2xl">
+                            <img src="assets/images/farmers.JPEG" class="w-full h-full object-cover cursor-zoom-in" onclick="openModal(this.src)">
+                        </div>
+                        <div class="space-y-10">
+                            <div class="reveal-item inline-flex items-center gap-3 px-5 py-2 rounded-full border border-heritage-gold/20 bg-heritage-gold/5 text-heritage-gold text-xs font-bold tracking-[0.3em] uppercase" style="transition-delay: 200ms">
+                                <i data-lucide="map" class="w-4 h-4"></i> Local Industry
+                            </div>
+                            <h3 class="reveal-item font-serif text-5xl md:text-7xl font-bold text-white tracking-tight" style="transition-delay: 400ms">
+                                Farmers
+                            </h3>
+                            <div class="reveal-item relative min-h-[180px]" style="transition-delay: 600ms">
+                                <div id="desc-farmers" class="text-white/60 text-lg md:text-xl leading-relaxed font-light transition-all duration-300">
+                                    <p>Farmers making salt in Pangasinan are featured in a digital installation. The image displays the vast salt beds of Pangasinan, showing the detailed process of salt crystallization. It also features a worker performing traditional salt-making tasks, set against a beautiful skyline and the distant view of mountains and landscapes.</p>
+                                </div>
+                            </div>
+                            <button onclick="nextDesc('farmers')" class="reveal-item group px-8 py-4 bg-white/5 hover:bg-heritage-gold hover:text-heritage-dark border border-white/10 rounded-2xl transition-all duration-300 font-bold flex items-center gap-3" style="transition-delay: 800ms">
+                                <span class="tracking-widest uppercase text-sm">Salt Making</span>
+                                <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- References Section -->
+        <section id="references" class="py-24">
+            <div class="container mx-auto px-6">
+                <div class="max-w-5xl mx-auto">
+                    <div class="text-center mb-24 reveal">
+                        <h2 class="font-serif text-6xl md:text-8xl font-bold mb-6 text-white">Sources & <span class="text-heritage-gold">References</span></h2>
+                        <p class="text-white/50 text-xl font-light">Credited materials and research used for this portal.</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 reveal">
+                        <a href="https://webinar.unesco-ichcap.org/wp-content/uploads/2021/10/2021-Expert-Meeting-for-Building-Network-on-Maritime-ICH_Lalaine-F.-Magat.pdf" target="_blank" class="glass-card p-10 flex flex-col gap-6 group hover:scale-[1.03] duration-500">
+                            <div class="flex justify-between items-start">
+                                <div class="p-5 bg-heritage-gold/10 rounded-2xl text-heritage-gold group-hover:bg-heritage-gold group-hover:text-heritage-dark transition-all duration-500">
+                                    <i data-lucide="file-text" class="w-8 h-8"></i>
+                                </div>
+                                <i data-lucide="external-link" class="w-5 h-5 text-white/20 group-hover:text-heritage-gold"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-heritage-gold font-bold uppercase tracking-[0.3em] mb-3">UNESCO ICHCAP</p>
+                                <h5 class="font-serif text-3xl font-bold mb-4 group-hover:text-heritage-gold transition-colors">KALUKOR Research</h5>
+                                <p class="text-white/60 leading-relaxed text-lg font-light">Comprehensive study on maritime intangible cultural heritage and traditional fishing.</p>
+                            </div>
+                        </a>
+                        
+                        <a href="https://filipeanut.art/the-jeepney-a-history-and-hopefully-a-future/" target="_blank" class="glass-card p-10 flex flex-col gap-6 group hover:scale-[1.03] duration-500">
+                            <div class="flex justify-between items-start">
+                                <div class="p-5 bg-heritage-gold/10 rounded-2xl text-heritage-gold group-hover:bg-heritage-gold group-hover:text-heritage-dark transition-all duration-500">
+                                    <i data-lucide="truck" class="w-8 h-8"></i>
+                                </div>
+                                <i data-lucide="external-link" class="w-5 h-5 text-white/20 group-hover:text-heritage-gold"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-heritage-gold font-bold uppercase tracking-[0.3em] mb-3">Filipeanut Art</p>
+                                <h5 class="font-serif text-3xl font-bold mb-4 group-hover:text-heritage-gold transition-colors">Jeepney History</h5>
+                                <p class="text-white/60 leading-relaxed text-lg font-light">Historical evolution of the iconic Philippine Jeepney from WWII surplus.</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.facebook.com/akarngpangasinense/posts/pfbid0VydUuwTjzCmWpwfBxAtHNkxGWGrDdpod8k3ueFKdwK5MRCHVywuFzvih4cb3EEN4l?__cft__[0]=AZb7mAnGgWs8twjsN-MwUlTb0fHbl8cFHzbfO90lSme27HPzd6wrUkNlJ0dmJIgktOFSJY4gtbQ3WpxvNqw8wJcgVuMDA5_htbbLKBAHF6hrgKnEY7lYc07U8G5U_qS3TDPaSi8mkWswVOtw9ZMGmxim9sWaJKQ0f9FZ1wgV83suPw&__tn__=%2CO%2CP-R." target="_blank" class="glass-card p-10 flex flex-col gap-6 group hover:scale-[1.03] duration-500">
+                            <div class="flex justify-between items-start">
+                                <div class="p-5 bg-heritage-gold/10 rounded-2xl text-heritage-gold group-hover:bg-heritage-gold group-hover:text-heritage-dark transition-all duration-500">
+                                    <i data-lucide="waves" class="w-8 h-8"></i>
+                                </div>
+                                <i data-lucide="external-link" class="w-5 h-5 text-white/20 group-hover:text-heritage-gold"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-heritage-gold font-bold uppercase tracking-[0.3em] mb-3">Akar ng Pangasinense</p>
+                                <h5 class="font-serif text-3xl font-bold mb-4 group-hover:text-heritage-gold transition-colors">Dayat Tradition</h5>
+                                <p class="text-white/60 leading-relaxed text-lg font-light">Community documentation of local sea-related traditions and maritime culture.</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.pcc.gov.ph" target="_blank" class="glass-card p-10 flex flex-col gap-6 group hover:scale-[1.03] duration-500">
+                            <div class="flex justify-between items-start">
+                                <div class="p-5 bg-heritage-gold/10 rounded-2xl text-heritage-gold group-hover:bg-heritage-gold group-hover:text-heritage-dark transition-all duration-500">
+                                    <i data-lucide="paw-print" class="w-8 h-8"></i>
+                                </div>
+                                <i data-lucide="external-link" class="w-5 h-5 text-white/20 group-hover:text-heritage-gold"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-heritage-gold font-bold uppercase tracking-[0.3em] mb-3">Philippine Carabao Center</p>
+                                <h5 class="font-serif text-3xl font-bold mb-4 group-hover:text-heritage-gold transition-colors">Carabao Cultural Page</h5>
+                                <p class="text-white/60 leading-relaxed text-lg font-light">Information about the Carabao's vital role in Philippine agriculture and heritage.</p>
+                            </div>
+                        </a>
+
+                        <a href="https://www.pangasinan.gov.ph/the-province/geography/" target="_blank" class="glass-card p-10 flex flex-col gap-6 group hover:scale-[1.03] duration-500 md:col-span-2 md:max-w-xl md:mx-auto">
+                            <div class="flex justify-between items-start">
+                                <div class="p-5 bg-heritage-gold/10 rounded-2xl text-heritage-gold group-hover:bg-heritage-gold group-hover:text-heritage-dark transition-all duration-500">
+                                    <i data-lucide="map" class="w-8 h-8"></i>
+                                </div>
+                                <i data-lucide="external-link" class="w-5 h-5 text-white/20 group-hover:text-heritage-gold"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs text-heritage-gold font-bold uppercase tracking-[0.3em] mb-3">pangasinan.gov.ph</p>
+                                <h5 class="font-serif text-3xl font-bold mb-4 group-hover:text-heritage-gold transition-colors">Farmer Geography</h5>
+                                <p class="text-white/60 leading-relaxed text-lg font-light">Overview of Pangasinan's strategic location, mountain ranges, and the vital Agno River system.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-heritage-dark border-t border-white/5 py-20">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-12 text-center md:text-left">
+                <div class="space-y-6">
+                    <h2 class="font-serif text-3xl font-bold text-heritage-gold flex items-center gap-4 justify-center md:justify-start group">
+                        <div class="p-3 bg-heritage-gold/10 rounded-2xl group-hover:bg-heritage-gold group-hover:text-heritage-dark transition-all duration-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 21h18" />
+                                <path d="M3 7v1a3 3 0 0 0 6 0V7m6 0v1a3 3 0 0 0 6 0V7M3 7l9-4 9 4M4 11v10m16-10v10m-8-10v10m-8-6h16" />
+                            </svg>
+                        </div>
+                        <div class="flex flex-col -space-y-1">
+                            <span class="text-[10px] tracking-[0.5em] text-white/40 font-sans">DIGITAL</span>
+                            <span class="tracking-tighter">MUSEUM</span>
+                        </div>
+                    </h2>
+                    <p class="text-white/40 max-w-sm">Preserving Pangasinan's rich cultural heritage through digital storytelling and interactive experiences.</p>
+                </div>
+                
+                <div class="flex flex-col items-center md:items-end gap-6">
+                    <div class="flex gap-4">
+                        <button onclick="openContactModal()" class="p-4 rounded-xl bg-white/5 hover:bg-heritage-gold hover:text-heritage-dark transition-all border border-white/10 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        </button>
+                        <a href="#" class="p-4 rounded-xl bg-white/5 hover:bg-heritage-gold hover:text-heritage-dark transition-all border border-white/10 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                        </a>
+                        <a href="#" class="p-4 rounded-xl bg-white/5 hover:bg-heritage-gold hover:text-heritage-dark transition-all border border-white/10 group">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                        </a>
+                    </div>
+                    <p class="text-white/20 text-sm tracking-widest uppercase font-bold">&copy; 2026 Digital Museum Project. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal for Zoom -->
+    <div id="modal" class="fixed inset-0 z-[100] hidden bg-black/95 flex items-center justify-center p-4 cursor-zoom-out" onclick="closeModal()">
+        <button class="absolute top-8 right-8 text-white/50 hover:text-white transition-colors">
+            <i data-lucide="x" class="w-10 h-10"></i>
+        </button>
+        <img id="modalImg" class="max-w-full max-h-full rounded-2xl shadow-2xl shadow-heritage-gold/20 object-contain animate-fade-in" src="" alt="Zoomed view">
+    </div>
+
+    <!-- Contact Modal -->
+    <div id="contactModal" class="fixed inset-0 z-[100] hidden bg-black/80 flex items-center justify-center p-4" onclick="closeContactModal()">
+        <div class="glass-card max-w-md w-full p-10 text-center border-heritage-gold/30 animate-slide-up bg-heritage-dark/95 shadow-[0_40px_100px_rgba(0,0,0,0.8)]" onclick="event.stopPropagation()">
+            <div class="w-24 h-24 bg-heritage-gold/10 rounded-full flex items-center justify-center mx-auto mb-8 text-heritage-gold animate-glow">
+                <i data-lucide="mail" class="w-12 h-12"></i>
+            </div>
+            <h3 class="font-serif text-4xl font-bold text-white mb-4 uppercase tracking-widest">Contact Us</h3>
+            <p class="text-white/50 mb-10 italic font-light">"We'd love to hear from you!"</p>
+            
+            <div class="bg-white/5 rounded-3xl p-8 border border-white/5 mb-10 group hover:border-heritage-gold/30 transition-all">
+                <p class="text-[10px] text-heritage-gold uppercase tracking-[0.4em] mb-4 font-bold">Email Address</p>
+                <a href="mailto:group1.bsml5@gmail.com" class="text-xl md:text-2xl font-bold text-white hover:text-heritage-gold transition-colors break-all underline decoration-heritage-gold/20 underline-offset-8">
+                    group1.bsml5@gmail.com
+                </a>
+            </div>
+
+            <button onclick="closeContactModal()" class="w-full py-5 bg-heritage-gold text-heritage-dark font-bold rounded-2xl hover:scale-105 active:scale-95 transition-all shadow-2xl shadow-heritage-gold/30 text-lg uppercase tracking-widest">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initHomeIndicators();
+            startAutoSlide();
+            initScrollReveal();
+            handleHeaderScroll();
+            startGalleryAutoSlides();
+        });
+
+        // Scroll Reveal Animation
+        function initScrollReveal() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        }
+
+        // Header Scroll Effect
+        function handleHeaderScroll() {
+            const header = document.getElementById('main-header');
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    header.classList.add('py-2');
+                    header.querySelector('.glass-card').classList.add('!bg-heritage-dark/95', 'shadow-heritage-gold/5');
+                } else {
+                    header.classList.remove('py-2');
+                    header.querySelector('.glass-card').classList.remove('!bg-heritage-dark/95', 'shadow-heritage-gold/5');
+                }
+            });
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            const isOpen = !menu.classList.contains('hidden');
+            
+            if (!isOpen) {
+                menu.classList.remove('hidden');
+                setTimeout(() => {
+                    menu.classList.remove('opacity-0', 'translate-y-full');
+                }, 10);
+            } else {
+                menu.classList.add('opacity-0', 'translate-y-full');
+                setTimeout(() => {
+                    menu.classList.add('hidden');
+                }, 500);
+            }
+        }
+
+        // Initialize Home Gallery Indicators
+        function initHomeIndicators() {
+            const track = document.getElementById('track-home-gallery');
+            const indicators = document.getElementById('home-gallery-indicators');
+            const count = track.children.length;
+            
+            for (let i = 0; i < count; i++) {
+                const dot = document.createElement('div');
+                dot.className = `w-2 h-2 rounded-full transition-all duration-300 ${i === 0 ? 'bg-heritage-gold w-6' : 'bg-white/30'}`;
+                dot.id = `indicator-home-gallery-${i}`;
+                indicators.appendChild(dot);
+            }
+        }
+
+        // Data for descriptions to cycle through
+        const descriptions = {
+            kalukor: [
+                {
+                    title: "Description",
+                    text: "According to UNESCO/ICHCAP (2021), “Kalukor” is a traditional beach seine fishing practice in Pangasinan where fishermen collaboratively pull nets from the shore for catching fishes."
+                },
+                {
+                    title: "Description",
+                    text: "The “Kalukor” is a piece of sculpture made by Ar. Mark Delos Santos, depicting the synchronized effort, which highlights both the physical labor and the Filipino value of “Bayanihan” that foretells community cooperation and collaboration as key importances that reflects the culture and social background of people in the province of Pangasinan."
+                },
+                {
+                    title: "Description",
+                    text: "The artwork, “Kalukor” piece sculpture, shows the difficulties fishermen faces in their livelihood and emphasizes their resilience and hardships through teamwork, whilst honoring the fishing traditions and cultural heritage of Pangasinan. The artwork symbolizes and portrays the “Bayanihan” spirit, a Filipino value that instills collective effort and unity, a value that reflects pangasinense people."
+                },
+                {
+                    title: "Message and reflection",
+                    text: "The piece communicates that unity and cooperation are sources of strength. It reflects how collective efforts and collaboration helps people overcome challenges in life. Highlighting the importance of cooperation, showing that challenges becomes easier to overcome when people supports one another and work together as a team."
+                }
+            ],
+            jeepney: [
+                {
+                    title: "JEEPNEY",
+                    text: "Jeepneys are often called “the king of the road”, but in the past, it was just used as a military jeep that the United States army left in the Philippines. After World War II, the public transport in the country was devastated but Filipinos, known for being the street smart people they are, found a way to convert the remaining military jeeps into something useful for their survival. They modified the vehicles by adding roofs, extending the chassis, and installing rear bench seats that created a unique look and affordable public transport system that eventually became an icon in the country."
+                },
+                {
+                    title: "JEEPNEY",
+                    text: "The word “jeepney” came from “jitney”, formulated by French-speaking African-Americans from “jetnee”, a French word which means token, to “jeep”, another word for a “rideshare” that started wayback in the U.S.. Car owners who were unemployed or needed more money that time figured out that they could charge people to ride with them for a cost of 5 cents. With the introdution of jeepneys in the Philippines, the usage of kalesas or horse-drawn carts also declined as more and more people started using automobiles."
+                },
+                {
+                    title: "JEEPNEY",
+                    text: "Almost 80 years after the jeepney was born, they are still in-use as of today. Evolving further with different designs all over the country. For Filipinos, the jeepney is not just a mode of transportation but also a statement for their survivability in times of crisis. Although there have been plans to get rid of jeepneys because of safety, health, and environmental problems they omit, we cannot deny the help it gave us for the longest time."
+                }
+            ],
+            kalabaw: [
+                {
+                    text: "The people of Pangasinan really love the animal “Kalabaw” or Carabao. This kalabaw is very special to them. It makes them think of farming and the way they live every day. The kalabaw reminds them of Pangasinan and the life they have there with the kalabaw. At this museum you can see the kalabaw pulling a cart. The cart is filled with baskets that people made by hand."
+                },
+                {
+                    text: "This shows what the kalabaw does every day to help the farmers with their work. The kalabaw has been helping farmers for a long time. The kalabaw is strong and patient so people can always count on the kalabaw. The kalabaw is a partner for farmers in Pangasinan."
+                },
+                {
+                    text: "The baskets on the cart are made by people who are good at making things. These baskets look like things like bayong or bilao which people use to carry the crops they harvest and their personal things. These baskets show how creative the people, in communities are and how they make a living by making things."
+                },
+                {
+                    text: "In the background of the picture you can see colors and patterns that're part of Filipino culture. The Filipino culture has a lot of colors and patterns. These colors and patterns of Filipino culture might be inspired by festivals or cultural events that show the traditions and daily life of the people. The Filipino culture is really interesting."
+                }
+            ],
+            dayat: [
+                {
+                    text: "The “DÁYAT” is a visual art installation featured in the Banaan Pangasinan Provincial Museum that highlights the significance of the sea among the residents of Pangasinan. “Dayat” in Tagalog “Dagat” refers to the sea. This visual art installation captures the lives of the fishermen who earns from fishing. The art piece conveys the message that the sea is an essential natural resource and source of cultural identity for the people living nearby coastal regions of Pangasinan."
+                },
+                {
+                    text: "The “DÁYAT” visual art installation has a significant purpose, it emphasizes the importance of recognizing the efforts of the fisherman and respecting the sea, this visual art installation specifically depicts the sea, and its significance to the people in the province of Pangasinan, as it is their primary source of life, this where they get food, earn money using its natural resources, and shaping life in Pangasinan, hence also the name “Pangasinan” which means “Pang-asinan” meaning \"place of salt-making\" (panagASINan). Historically, the coastal inhabitants developed an industry based on salt production from the sea."
+                },
+                {
+                    text: "The installation is a collaborative project by Clyde Aedriel Rafael and Mark Delos Santos, launched in April 2026, using various mediums to represent distinct notions, such as rattan for natural resources and craftsmanship, fabric for the community, metal for power and strength, and light for hope, with colors that depicts emotions and feelings."
+                }
+            ],
+            farmers: [
+                {
+                    text: "Farmers making salt in Pangasinan are featured in a digital installation. The image displays the vast salt beds of Pangasinan, showing the detailed process of salt crystallization. It also features a worker performing traditional salt-making tasks, set against a beautiful skyline and the distant view of mountains and landscapes."
+                },
+                {
+                    text: "This artwork conveys the idea that nature is a rich source of life and livelihood. Salt, often called \"white gold,\" represents the industry and hard work of the people, while the mountains and scenery symbolize peace and natural beauty. It aims to inspire appreciation and respect for the environment that sustains the community."
+                },
+                {
+                    text: "Pangasinan is historically known as the \"Land of Salt\" due to its thriving salt industry. The province’s geography, which includes coastal plains and mountain ranges, has greatly influenced its economy and culture. Salt production has been a significant part of local tradition and history for many generations."
+                }
+            ]
+        };
+
+        const currentDescIndex = {};
+        const currentSlideIndex = {};
+
+        const buttonTexts = {
+            kalukor: "Read More",
+            jeepney: "Next Insight",
+            kalabaw: "Explore Tradition",
+            dayat: "Artistic Meaning",
+            farmers: "Salt Making"
+        };
+
+        function nextDesc(id) {
+            if (!currentDescIndex[id]) currentDescIndex[id] = 0;
+            currentDescIndex[id] = (currentDescIndex[id] + 1) % descriptions[id].length;
+            
+            const container = document.getElementById(`desc-${id}`);
+            const data = descriptions[id][currentDescIndex[id]];
+            const btn = container.parentElement.nextElementSibling;
+            
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(10px)';
+            
+            setTimeout(() => {
+                container.innerHTML = `<p>${data.text}</p>`;
+                container.style.opacity = '1';
+                container.style.transform = 'translateY(0)';
+                
+                const btnContent = btn?.querySelector('span') || btn;
+                if (btnContent && buttonTexts[id]) {
+                    btnContent.innerHTML = `${buttonTexts[id]}`;
+                    lucide.createIcons();
+                }
+            }, 300);
+        }
+
+        function moveSlide(id, dir, manual = false) {
+            const track = document.getElementById(`track-${id}`);
+            if (!currentSlideIndex[id]) currentSlideIndex[id] = 0;
+            
+            const count = track.children.length;
+            currentSlideIndex[id] = (currentSlideIndex[id] + dir + count) % count;
+            
+            track.style.transform = `translateX(-${currentSlideIndex[id] * 100}%)`;
+
+            const indicators = document.getElementById(`${id}-indicators`);
+            if (indicators) {
+                for (let i = 0; i < count; i++) {
+                    const dot = document.getElementById(`indicator-${id}-${i}`);
+                    if (dot) {
+                        dot.className = `w-2 h-2 rounded-full transition-all duration-300 ${i === currentSlideIndex[id] ? 'bg-heritage-gold w-6' : 'bg-white/30'}`;
+                    }
+                }
+            }
+
+            if (manual) {
+                if (id === 'home-gallery') {
+                    startAutoSlide();
+                } else if (galleryTimers[id]) {
+                    clearInterval(galleryTimers[id]);
+                    galleryTimers[id] = setInterval(() => {
+                        if (document.getElementById('gallery').classList.contains('active')) {
+                            moveSlide(id, 1);
+                        }
+                    }, 5000);
+                }
+            }
+        }
+
+        let autoSlideTimer;
+        let galleryTimers = {};
+
+        function startAutoSlide() {
+            if (autoSlideTimer) clearInterval(autoSlideTimer);
+            autoSlideTimer = setInterval(() => {
+                if (document.getElementById('home').classList.contains('active')) {
+                    moveSlide('home-gallery', 1);
+                }
+            }, 5000);
+        }
+
+        function startGalleryAutoSlides() {
+            const galleryItems = ['kalukor', 'jeepney', 'kalabaw', 'dayat', 'farmers'];
+            galleryItems.forEach(id => {
+                if (galleryTimers[id]) clearInterval(galleryTimers[id]);
+                galleryTimers[id] = setInterval(() => {
+                    const el = document.getElementById('gallery');
+                    if (el && el.classList.contains('active')) {
+                        moveSlide(id, 1);
+                    }
+                }, 5000);
+            });
+        }
+
+        function showSection(id, btn) {
+            document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+            const section = document.getElementById(id);
+            if (section) section.classList.add("active");
+
+            document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
+            if (btn) {
+                btn.classList.add("active");
+            } else {
+                const navBtn = document.getElementById(`nav-${id}`);
+                if (navBtn) navBtn.classList.add("active");
+            }
+
+            window.scrollTo({ top: 0, behavior: "smooth" });
+            lucide.createIcons();
+        }
+
+        function openModal(src) {
+            const modal = document.getElementById("modal");
+            const img = document.getElementById("modalImg");
+            modal.classList.remove("hidden");
+            img.src = src;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            document.getElementById("modal").classList.add("hidden");
+            document.body.style.overflow = 'auto';
+        }
+
+        function openContactModal() {
+            const modal = document.getElementById("contactModal");
+            modal.classList.remove("hidden");
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeContactModal() {
+            document.getElementById("contactModal").classList.add("hidden");
+            document.body.style.overflow = 'auto';
+        }
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape") {
+                closeModal();
+                closeContactModal();
+            }
+        });
+    </script>
+</body>
+</html>
